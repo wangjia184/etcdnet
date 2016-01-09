@@ -36,7 +36,25 @@ var options = new EtcdClientOpitions() {
 EtcdClient etcdClient = new EtcdClient(options);
 ```
 
-#### Thread Safety
+
+
+##### Options
+
+`EtcdClientOpitions` allows one to customize the `EtcdClient`.
+
+* `Urls` The url of the etcd service. If you are running a etcd cluster, more then one urls here.
+* `IgnoreCertificateError`
+* `X509Certificate`
+* `Username`
+* `Password`
+* `UseProxy`
+* `JsonDeserializer`
+
+### Make the call
+
+`EtcdClient` class provides APIs like below
+
+##### Thread Safety
 
 The implementation of `EtcdClient` class is guaranteed to be thread-safe, which means the methods of the same instance can be called from different threads without synchronization. 
 
