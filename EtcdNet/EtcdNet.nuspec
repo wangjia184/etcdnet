@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>etcdnet</id>
-    <version>1.0.0.1</version>
+    <version>1.0.0.3</version>
     <authors>Jerry.Wang</authors>
     <owners>Jerry.Wang</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
     <projectUrl>https://github.com/wangjia184/etcdnet</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>.NET client library to access etcd</description>
-    <releaseNotes>stable release</releaseNotes>
+    <releaseNotes>https://github.com/wangjia184/etcdnet Zero dependency / Support authentication / client certificate / etcd cluster</releaseNotes>
     <copyright>Copyright 2016</copyright>
   </metadata>
 </package>
