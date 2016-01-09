@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>etcdnet</id>
+    <version>1.0.0.1</version>
+    <authors>Jerry.Wang</authors>
+    <owners>Jerry.Wang</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
+    <projectUrl>https://github.com/wangjia184/etcdnet</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>.NET client library to access etcd</description>
+    <releaseNotes>stable release</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+  </metadata>
+</package>
