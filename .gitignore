@@ -1,0 +1,6 @@
+*.suo
+EtcdNet/obj
+EtcdNet/bin
+EtcdNet.Sample/obj
+EtcdNet.Sample/bin
+*.user
