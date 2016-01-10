@@ -1,7 +1,7 @@
 # EtcdNet
 
 
-EtcdNet is a .NET client library to access [etcd](https://github.com/coreos/etcd), which is a distributed, consistent key-value store for shared configuration and service discovery. 
+EtcdNet is a .NET client library to access [etcd](https://github.com/coreos/etcd) (protocol V2), which is a distributed, consistent key-value store for shared configuration and service discovery. 
 
 * Provides API for all key space operations
 * Support authentication & client-certificate
