@@ -462,11 +462,20 @@ namespace EtcdNet
             {
                 try
                 {
-                    return await SendRequest(HttpMethod.Get, requestUri);
+                    EtcdResponse resp = await SendRequest(HttpMethod.Get, requestUri);
+                    if (resp != null)
+                        return resp;
                 }
                 catch (TaskCanceledException)
                 {
                     // no changes detected and the connection idles for too long, try again
+                }
+                catch (HttpRequestException hrex)
+                {
+                    // server closed connection
+                    WebException webException = hrex.InnerException as WebException;
+                    if (webException == null || webException.Status != WebExceptionStatus.ConnectionClosed)
+                        throw;
                 }
             }
             
