@@ -41,6 +41,7 @@ namespace EtcdNet.Sample
                 Password = "654321",
                 IgnoreCertificateError = true, // If the ectd server is running with self-signed SSL certificate and we can ignore the SSL error
                 //X509Certificate = new X509Certificate2(@"client.p12"),  // client cerificate
+                JsonDeserializer = new NewtonsoftJsonDeserializer(),
             };
             EtcdClient etcdClient = new EtcdClient(options);
 
