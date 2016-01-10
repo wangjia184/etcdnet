@@ -38,9 +38,9 @@ string value = await etcdClient.GetNodeValueAsync("/some-key");
 //...
 ```
 
-[Here](./doc/api.md) you can find detailed api doc for `EtcdClient` class.
+[Here](./doc/api.md) you can find detailed api doc for `EtcdClient` class. More examples can be found in [sample](https://github.com/wangjia184/etcdnet/blob/master/EtcdNet.Sample/Program.cs).
 
-##### EtcdClientOpitions
+### EtcdClientOpitions
 
 `EtcdClientOpitions` allows to customize the `EtcdClient`.
 
@@ -79,8 +79,56 @@ class NewtonsoftJsonDeserializer : EtcdNet.IJsonDeserializer
 ```
 
 
-##### Thread Safety
+### Thread Safety
 
 The implementation of `EtcdClient` class is guaranteed to be thread-safe, which means the methods of the same instance can be called from different threads without synchronization. 
 
-Further, it is recommended to use only one `EtcdClient` instance to talk to the same etcd cluster. `System.Net.Http.HttpClient` class, which emits HTTP requests internally, uses its own connection pool, isolating its requests from requests executed by other HttpClient instances. Sharing the same `EtcdClient` instance helps to utilize features like [HTTP pipelining](https://en.wikipedia.org/wiki/HTTP_pipelining), which is good for performance.
+Further, it is recommended to use only one `EtcdClient` instance to talk to the same etcd cluster. `System.Net.Http.HttpClient` class, which emits HTTP requests internally, uses its own connection pool, isolating its requests from requests executed by other HttpClient instances. Sharing the same `EtcdClient` instance helps to utilize features like [HTTP pipelining](https://en.wikipedia.org/wiki/HTTP_pipelining).
+
+
+### Exception Handling
+
+Each of the [error code](https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md) defined by etcd is mapped to an individual exception class.
+
+```
+ EtcdGenericException
+  ├── EtcdCommonException
+  |    ├─ KeyNotFound
+  |    ├─ TestFailed
+  |    ├─ NotFile
+  |    ├─ NotDir
+  |    ├─ NodeExist
+  |    ├─ RootReadOnly
+  |    └─ DirNotEmpty
+  ├── EtcdPostFormException
+  |    ├─ PrevValueRequired
+  |    ├─ TTLNaN
+  |    ├─ IndexNaN
+  |    ├─ InvalidField
+  |    └─ InvalidForm
+  ├── EtcdRaftException
+  |    ├─ RaftInternal
+  |    └─ LeaderElect
+  └── EtcdException
+       ├─ WatcherCleared
+       └─ EventIndexCleared
+```
+
+Hence you have the choice to handle a specific error, or a group errors.
+```csharp
+try {
+    //...
+}
+catch (EtcdCommonException.KeyNotFound) {
+    // 100 error
+}
+catch (EtcdCommonException.NodeExist) {
+    // 105 error
+}
+catch (EtcdCommonException) {
+    // 100-199 errors
+}
+catch (EtcdGenericException) {
+    // all etcd errors
+}
+```
