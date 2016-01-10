@@ -13,15 +13,21 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace EtcdNet
 {
-    using DTO;
-
     /// <summary>
-    /// 
+    /// The EtcdClient class is used to talk with etcd service
     /// </summary>
     public class EtcdClient
     {
+
         HttpClientEx _currentClient;
         readonly IJsonDeserializer _jsonDeserializer;
+        long _lastIndex;
+
+        /// <summary>
+        /// X-Etcd-Cluster-Id
+        /// </summary>
+        public string ClusterID { get; private set; }
+        public long LastIndex { get; private set; }
 
         #region constructor EtcdClient(EtcdClientOpitions options)
         public EtcdClient(EtcdClientOpitions options)
@@ -81,7 +87,7 @@ namespace EtcdNet
         #endregion
 
         #region Task<T> SendRequest<T>(HttpRequestMessage requestMessage, IEnumerable<KeyValuePair<string, string>> formFields)
-        private async Task<T> SendRequest<T>(HttpMethod method, string requestUri, IEnumerable<KeyValuePair<string, string>> formFields = null) where T : EtcdResponseBase
+        private async Task<EtcdResponse> SendRequest(HttpMethod method, string requestUri, IEnumerable<KeyValuePair<string, string>> formFields = null)
         {
             HttpClientEx startClient = _currentClient;
             HttpClientEx currentClient = _currentClient;
@@ -134,12 +140,22 @@ namespace EtcdNet
                             if (currentClient != startClient)
                                 Interlocked.CompareExchange(ref _currentClient, currentClient, startClient);
 
-                            T t = _jsonDeserializer.Deserialize<T>(json);
-                            t.EtcdServer = currentClient.BaseAddress.OriginalString;
-                            t.EtcdIndex = GetLongValue(responseMessage, "X-Etcd-Index");
-                            t.RaftIndex = GetLongValue(responseMessage, "X-Raft-Index");
-                            t.RaftTerm = GetLongValue(responseMessage, "X-Raft-Term");
-                            return t;
+                            if( !string.IsNullOrWhiteSpace(json) )
+                            {
+                                EtcdResponse resp = _jsonDeserializer.Deserialize<EtcdResponse>(json);
+                                resp.EtcdServer = currentClient.BaseAddress.OriginalString;
+                                resp.EtcdClusterID = GetStringHeader(responseMessage, "X-Etcd-Cluster-Id");
+                                resp.EtcdIndex = GetLongHeader(responseMessage, "X-Etcd-Index");
+                                resp.RaftIndex = GetLongHeader(responseMessage, "X-Raft-Index");
+                                resp.RaftTerm = GetLongHeader(responseMessage, "X-Raft-Term");
+
+                                long previousIndex = _lastIndex;
+                                if (resp.EtcdIndex > previousIndex)
+                                    Interlocked.CompareExchange(ref _lastIndex, resp.EtcdIndex, previousIndex);
+                                this.ClusterID = resp.EtcdClusterID;
+                                return resp;
+                            }
+                            return null;
                         }
                     }
                 }
@@ -158,13 +174,15 @@ namespace EtcdNet
             }
         }
 
-        long GetLongValue(HttpResponseMessage responseMessage, string name)
+
+        long GetLongHeader(HttpResponseMessage responseMessage, string name)
         {
-            if( responseMessage.Content.Headers != null )
+
+            if (responseMessage.Headers != null)
             {
                 IEnumerable<string> headerValues;
                 long longValue;
-                if( responseMessage.Content.Headers.TryGetValues("X-Etcd-Index", out headerValues) && headerValues != null )
+                if (responseMessage.Headers.TryGetValues(name, out headerValues) && headerValues != null)
                 {
                     foreach( string headerValue in headerValues )
                     {
@@ -175,17 +193,35 @@ namespace EtcdNet
             }
             return 0;
         }
+
+        string GetStringHeader(HttpResponseMessage responseMessage, string name)
+        {
+
+            if (responseMessage.Headers != null)
+            {
+                IEnumerable<string> headerValues;
+                if (responseMessage.Headers.TryGetValues(name, out headerValues) && headerValues != null)
+                {
+                    foreach (string headerValue in headerValues)
+                    {
+                        if (!string.IsNullOrWhiteSpace(headerValue))
+                            return headerValue;
+                    }
+                }
+            }
+            return null;
+        }
         #endregion
 
         /// <summary>
         /// Get etcd node specified by `key`
         /// </summary>
-        /// <param name="key">The path of the node, must starts with `/`</param>
+        /// <param name="key">The path of the node, must start with `/`</param>
         /// <param name="recursive">Represents whether list the children nodes</param>
         /// <param name="sorted">To enumerate the in-order keys as a sorted list, use the "sorted" parameter.</param>
         /// <param name="ignoreKeyNotFoundException">If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead.</param>
         /// <returns>represents response; or `null` if not exist</returns>
-        public async Task<EtcdNodeResponse> GetNodeAsync(string key
+        public async Task<EtcdResponse> GetNodeAsync(string key
             , bool ignoreKeyNotFoundException = false
             , bool recursive = false
             , bool sorted = false
@@ -204,7 +240,7 @@ namespace EtcdNet
                     , recursive.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()
                     , sorted.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()
                     );
-                EtcdNodeResponse getNodeResponse = await SendRequest<EtcdNodeResponse>( HttpMethod.Get, url);
+                EtcdResponse getNodeResponse = await SendRequest( HttpMethod.Get, url);
                 return getNodeResponse;
             }
             catch(EtcdCommonException.KeyNotFound)
@@ -219,12 +255,12 @@ namespace EtcdNet
         /// Simplified version of `GetNodeAsync`.
         /// Get the value of the specific node
         /// </summary>
-        /// <param name="key">The path of the node, must starts with `/`</param>
+        /// <param name="key">The path of the node, must start with `/`</param>
         /// <param name="ignoreKeyNotFoundException">If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead.</param>
         /// <returns>A string represents a value. It could be `null`</returns>
         public async Task<string> GetNodeValueAsync(string key, bool ignoreKeyNotFoundException = false)
         {
-            EtcdNodeResponse getNodeResponse = await this.GetNodeAsync(key, ignoreKeyNotFoundException);
+            EtcdResponse getNodeResponse = await this.GetNodeAsync(key, ignoreKeyNotFoundException);
             if (getNodeResponse != null && getNodeResponse.Node != null)
                 return getNodeResponse.Node.Value;
             return null;
@@ -238,35 +274,32 @@ namespace EtcdNet
         /// <param name="ttl">time to live, in seconds</param>
         /// <param name="dir">indicates if this is a directory</param>
         /// <returns>SetNodeResponse</returns>
-        public Task<EtcdNodeResponse> SetNodeAsync(string key, string value, int? ttl = null, bool? dir = null)
+        public Task<EtcdResponse> SetNodeAsync(string key, string value, int? ttl = null, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException("key");
-            if (value == null)
-                throw new ArgumentNullException("value");
             if (!key.StartsWith("/"))
                 throw new ArgumentException("The value of `key` must start with `/`.");
 
             string url = string.Format(CultureInfo.InvariantCulture, "/v2/keys{0}", key);
-            List<KeyValuePair<string, string>> list = new List<KeyValuePair<string,string>>()
-            {
-                new KeyValuePair<string,string>( "value", value)
-            };
+            List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
+            if( value != null)
+                list.Add(new KeyValuePair<string, string>("value", value));
             if (ttl.HasValue)
                 list.Add(new KeyValuePair<string, string>("ttl", ttl.Value.ToString(CultureInfo.InvariantCulture)));
             if( dir.HasValue)
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
 
-            return SendRequest<EtcdNodeResponse>(HttpMethod.Put, url, list);
+            return SendRequest(HttpMethod.Put, url, list);
         }
 
         /// <summary>
         /// delete specific node
         /// </summary>
-        /// <param name="key">The path of the node, must starts with `/`</param>
+        /// <param name="key">The path of the node, must start with `/`</param>
         /// <param name="ignoreKeyNotFoundException">If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead.</param>
         /// <returns>SetNodeResponse instance or `null`</returns>
-        public async Task<EtcdNodeResponse> DeleteNodeAsync(string key, bool ignoreKeyNotFoundException = false, bool? dir = null)
+        public async Task<EtcdResponse> DeleteNodeAsync(string key, bool ignoreKeyNotFoundException = false, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException("key");
@@ -279,7 +312,7 @@ namespace EtcdNet
 
             try
             {
-                return await SendRequest<EtcdNodeResponse>(HttpMethod.Delete, url);
+                return await SendRequest(HttpMethod.Delete, url);
             }
             catch(EtcdCommonException.KeyNotFound)
             {
@@ -289,7 +322,7 @@ namespace EtcdNet
             }
         }
 
-        public Task<EtcdNodeResponse> CreateInOrderNodeAsync(string key, string value, int? ttl = null, bool? dir = null)
+        public Task<EtcdResponse> CreateInOrderNodeAsync(string key, string value, int? ttl = null, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException("key");
@@ -308,10 +341,10 @@ namespace EtcdNet
             if (dir.HasValue)
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
 
-            return SendRequest<EtcdNodeResponse>(HttpMethod.Post, url, list);
+            return SendRequest(HttpMethod.Post, url, list);
         }
 
-        public Task<EtcdNodeResponse> CreateNodeAsync(string key, string value, int? ttl = null, bool? dir = null)
+        public Task<EtcdResponse> CreateNodeAsync(string key, string value, int? ttl = null, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException("key");
@@ -331,10 +364,10 @@ namespace EtcdNet
             if (dir.HasValue)
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
 
-            return SendRequest<EtcdNodeResponse>(HttpMethod.Put, url, list);
+            return SendRequest(HttpMethod.Put, url, list);
         }
 
-        public Task<EtcdNodeResponse> CompareAndSwapNodeAsync(string key, string prevValue, string value, int? ttl = null, bool? dir = null)
+        public Task<EtcdResponse> CompareAndSwapNodeAsync(string key, string prevValue, string value, int? ttl = null, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException("key");
@@ -354,10 +387,10 @@ namespace EtcdNet
             if (dir.HasValue)
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
 
-            return SendRequest<EtcdNodeResponse>(HttpMethod.Put, url, list);
+            return SendRequest(HttpMethod.Put, url, list);
         }
 
-        public Task<EtcdNodeResponse> CompareAndSwapNodeAsync(string key, long prevIndex, string value, int? ttl = null, bool? dir = null)
+        public Task<EtcdResponse> CompareAndSwapNodeAsync(string key, long prevIndex, string value, int? ttl = null, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException("key");
@@ -377,11 +410,11 @@ namespace EtcdNet
             if (dir.HasValue)
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
 
-            return SendRequest<EtcdNodeResponse>(HttpMethod.Put, url, list);
+            return SendRequest(HttpMethod.Put, url, list);
         }
 
 
-        public Task<EtcdNodeResponse> CompareAndDeleteNodeAsync(string key, string prevValue)
+        public Task<EtcdResponse> CompareAndDeleteNodeAsync(string key, string prevValue)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException("key");
@@ -389,10 +422,10 @@ namespace EtcdNet
                 throw new ArgumentException("The value of `key` must start with `/`.");
 
             string url = string.Format(CultureInfo.InvariantCulture, "/v2/keys{0}?prevValue={1}", key, Uri.EscapeDataString(prevValue));
-            return SendRequest<EtcdNodeResponse>(HttpMethod.Delete, url);
+            return SendRequest(HttpMethod.Delete, url);
         }
 
-        public Task<EtcdNodeResponse> CompareAndDeleteNodeAsync(string key, long prevIndex)
+        public Task<EtcdResponse> CompareAndDeleteNodeAsync(string key, long prevIndex)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException("key");
@@ -400,7 +433,43 @@ namespace EtcdNet
                 throw new ArgumentException("The value of `key` must start with `/`.");
 
             string url = string.Format(CultureInfo.InvariantCulture, "/v2/keys{0}?prevValue={1}", key, prevIndex);
-            return SendRequest<EtcdNodeResponse>(HttpMethod.Delete, url);
+            return SendRequest(HttpMethod.Delete, url);
+        }
+
+
+        public async Task<EtcdResponse> WatchNodeAsync(string key, bool recursive = false, long? waitIndex = null)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentNullException("key");
+            if (!key.StartsWith("/"))
+                throw new ArgumentException("The value of `key` must start with `/`.");
+
+            string requestUri = string.Format(CultureInfo.InvariantCulture
+                , "/v2/keys{0}?wait=true&recursive={1}"
+                , key
+                , recursive.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()
+                );
+            if (waitIndex.HasValue)
+            {
+                requestUri = string.Format(CultureInfo.InvariantCulture
+                    , "{0}&waitIndex={1}"
+                    , requestUri
+                    , waitIndex.Value
+                    );
+            }
+
+            for (; ; )
+            {
+                try
+                {
+                    return await SendRequest(HttpMethod.Get, requestUri);
+                }
+                catch (TaskCanceledException)
+                {
+                    // no changes detected and the connection idles for too long, try again
+                }
+            }
+            
         }
     }
 }

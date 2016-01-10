@@ -44,10 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DefaultJsonDeserializer.cs" />
-    <Compile Include="DTO\ErrorResponse.cs" />
-    <Compile Include="DTO\EtcdNode.cs" />
-    <Compile Include="DTO\EtcdResponseBase.cs" />
-    <Compile Include="DTO\EtcdNodeResponse.cs" />
+    <Compile Include="EtcdErrorResponse.cs" />
+    <Compile Include="EtcdNode.cs" />
+    <Compile Include="EtcdResponse.cs" />
     <Compile Include="ErrorCode.cs" />
     <Compile Include="EtcdClient.cs" />
     <Compile Include="EtcdClientOpitions.cs" />

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
 
-namespace EtcdNet.DTO
+namespace EtcdNet
 {
     [DataContract]
     public class ErrorResponse

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Runtime.Serialization;
 using System.Globalization;
 
-namespace EtcdNet.DTO
+namespace EtcdNet
 {
     /// <summary>
     /// Represent a node in etcd

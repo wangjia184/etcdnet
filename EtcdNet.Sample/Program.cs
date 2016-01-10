@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography.X509Certificates;
 using EtcdNet;
-using EtcdNet.DTO;
+
 
 namespace EtcdNet.Sample
 {
@@ -45,7 +45,9 @@ namespace EtcdNet.Sample
             };
             EtcdClient etcdClient = new EtcdClient(options);
 
-            string key = "/dev/database";
+            
+
+            string key = "/my/key";
             string value;
             // query the value of the node using GetNodeValueAsync
             try {
@@ -58,7 +60,7 @@ namespace EtcdNet.Sample
             
 
             // update the value using SetNodeAsync
-            EtcdNodeResponse resp = await etcdClient.SetNodeAsync(key, "some value");
+            EtcdResponse resp = await etcdClient.SetNodeAsync(key, "some value");
             Console.WriteLine("Key `{0}` is changed, modifiedIndex={1}", key, resp.Node.ModifiedIndex);
 
             // query the node using GetNodeAsync
@@ -68,16 +70,20 @@ namespace EtcdNet.Sample
             else
                 Console.WriteLine("The value of `{0}` is `{1}`", key, resp.Node.Value);
 
-            // SetNodeAsync with 1 second TTL
-            resp = await etcdClient.SetNodeAsync(key, Guid.NewGuid().ToString(), ttl : 1);
-            Console.WriteLine("Key `{0}` is changed with TTL, expiration={1}, modifiedIndex={2}", key, resp.Node.GetExpirationTime(), resp.Node.ModifiedIndex);
-
             //////////////////////////////////////////////////////////
-            key = "/queue";
-            // create 5 in-order nodes
+
+            List<Task<EtcdResponse>> tasks = new List<Task<EtcdResponse>>();
+            key = "/in-order-queue";
+
+            // start monitoring the expire event
+            WatchChanges(etcdClient, key);
+
+            // create 5 in-order nodes, TTL = 3 second
             for (int i = 0; i < 5; i++) {
-                await etcdClient.CreateInOrderNodeAsync(key, i.ToString());
+                tasks.Add( etcdClient.CreateInOrderNodeAsync(key, i.ToString(), ttl: 3) );
             }
+
+            await Task.WhenAll(tasks);
 
             // list the in-order nodes
             resp = await etcdClient.GetNodeAsync(key, false, recursive: true, sorted:true);
@@ -85,9 +91,9 @@ namespace EtcdNet.Sample
                 foreach (var node in resp.Node.Nodes)
                 {
                     Console.WriteLine("`{0}` = {1}", node.Key, node.Value);
-                    resp = await etcdClient.DeleteNodeAsync(node.Key, ignoreKeyNotFoundException: true);
                 }
             }
+
 
             /////////////////////////////////////////////////////////////
             key = "/my/cas-test";
@@ -154,6 +160,42 @@ namespace EtcdNet.Sample
                 }
             }
             
+        }
+
+
+        static async void WatchChanges(EtcdClient etcdClient, string key)
+        {
+            long waitIndex = etcdClient.LastIndex;
+            for (; ; )
+            {
+                try
+                {
+                    EtcdResponse resp = await etcdClient.WatchNodeAsync(key, recursive: true, waitIndex: waitIndex);
+                    if (resp != null && resp.Node != null)
+                    {
+                        if( string.Equals( resp.Action, EtcdResponse.ACTION_EXPIRE) )
+                            Console.WriteLine("`{0}` is expired", resp.Node.Key);
+
+                        waitIndex = resp.Node.ModifiedIndex + 1;
+                    }
+                    continue;
+                }
+                catch(Exception ex)
+                {
+                    int indentation = 0;
+                    while (ex != null)
+                    {
+                        if (!(ex is AggregateException))
+                        {
+                            Console.WriteLine("{0} {1} : {2}", string.Empty.PadLeft(indentation), ex.GetType().Name, ex.Message);
+                        }
+                        indentation += 2;
+                        ex = ex.InnerException;
+                    }
+                }
+                // if something went wrong, wait for 1 second and try again
+                await Task.Delay(1000);
+            }
         }
     }
 }

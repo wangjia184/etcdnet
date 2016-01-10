@@ -8,7 +8,6 @@ using System.Globalization;
 
 namespace EtcdNet
 {
-    using DTO;
     /// <summary>
     /// Represents the generic exception from etcd
     /// https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md
