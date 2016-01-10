@@ -27,7 +27,6 @@ To use the client, the first step is to instantiate `EtcdClient` as below.
 
 ```csharp
 using EtcdNet;
-using EtcdNet.DTO;
 
 var options = new EtcdClientOpitions() {
     Urls = new string[] { "http://etcd0.em:2379" },
@@ -40,7 +39,7 @@ EtcdClient etcdClient = new EtcdClient(options);
 
 ##### Options
 
-`EtcdClientOpitions` allows one to customize the `EtcdClient`.
+`EtcdClientOpitions` allows to customize the `EtcdClient`.
 
 * `Urls` The url of the etcd service. If you are running a etcd cluster, more then one urls here.
 * `IgnoreCertificateError`
