@@ -1,847 +1,645 @@
-## EtcdNet ##
 
-# T:EtcdNet.DefaultJsonDeserializer
+# EtcdNet
 
- DefaultJsonDeserializer takes use of DataContractJsonSerializer 
 
+## DefaultJsonDeserializer
 
+DefaultJsonDeserializer takes use of DataContractJsonSerializer
 
----
-# T:EtcdNet.IJsonDeserializer
 
- This interface allows to choose alternative JSON deserializer 
+## ErrorCode
 
+error code in key space '/v2/keys' https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md
 
 
----
-##### M:EtcdNet.IJsonDeserializer.Deserialize``1(System.String)
+### F:EtcdNet.DirNotEmpty
 
- Deserialize the json string 
+Directory not empty
 
-|Name | Description |
-|-----|------|
-|json: |json string|
-Returns: deserialized json object
 
+### F:EtcdNet.EventIndexCleared
 
+The event in requested index is outdated and cleared
 
----
-# T:EtcdNet.ErrorResponse
 
- Represent etcd error JSON 
+### F:EtcdNet.IndexNaN
 
+The given index in POST form is not a number
 
 
----
-##### P:EtcdNet.ErrorResponse.ErrorCode
+### F:EtcdNet.InvalidField
 
- Error Code https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md 
+Invalid field
 
 
+### F:EtcdNet.InvalidForm
 
----
-##### P:EtcdNet.ErrorResponse.Message
+Invalid POST form
 
- Error message 
 
+### F:EtcdNet.KeyNotFound
 
+Key not found
 
----
-##### P:EtcdNet.ErrorResponse.Cause
 
- Cause 
+### F:EtcdNet.LeaderElect
 
+During Leader Election
 
 
----
-##### P:EtcdNet.ErrorResponse.Index
+### F:EtcdNet.NodeExist
 
- Index 
+Key already exists
 
 
+### F:EtcdNet.NotDir
 
----
-# T:EtcdNet.EtcdNode
+Not a directory
 
- Represent a node in etcd 
 
+### F:EtcdNet.NotFile
 
+Not a file
 
----
-##### M:EtcdNet.EtcdNode.GetExpirationTime
 
- Get expiration time of this node If none, DateTime.MaxValue is returned 
+### F:EtcdNet.PrevValueRequired
 
-Returns: 
+PrevValue is Required in POST form
 
 
+### F:EtcdNet.RaftInternal
 
----
-##### P:EtcdNet.EtcdNode.Key
+Raft Internal Error
 
- Path of the node 
 
+### F:EtcdNet.RootReadOnly
 
+Root is read only
 
----
-##### P:EtcdNet.EtcdNode.IsDirectory
 
- Is directory 
+### F:EtcdNet.TestFailed
 
+Compare failed
 
 
----
-##### P:EtcdNet.EtcdNode.Value
+### F:EtcdNet.TTLNaN
 
- Value 
+The given TTL in POST form is not a number
 
 
+### F:EtcdNet.WatcherCleared
 
----
-##### P:EtcdNet.EtcdNode.CreatedIndex
+watcher is cleared due to etcd recovery
 
- Index which creates this node 
 
+## ErrorResponse
 
+Represent etcd error JSON
 
----
-##### P:EtcdNet.EtcdNode.ModifiedIndex
 
- Index of the modification 
+### .Cause
 
+Cause
 
 
----
-##### P:EtcdNet.EtcdNode.TTL
+### .ErrorCode
 
- Time to live, in second 
+Error Code https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md
 
 
+### .Index
 
----
-##### P:EtcdNet.EtcdNode.Expiration
+Index
 
- Expiration time 
 
+### .Message
 
+Error message
 
----
-##### P:EtcdNet.EtcdNode.Nodes
 
- Children nodes 
+## EtcdClient
 
+The EtcdClient class is used to talk with etcd service
 
 
----
-# T:EtcdNet.EtcdResponse
+### M:EtcdNet.#ctor(options)
 
- Normal response of etcd 
+Constructor
 
+| Name | Description |
+| ---- | ----------- |
+| options | *EtcdNet.EtcdClientOpitions*<br>options to initialize |
 
+### .ClusterID
 
----
-##### F:EtcdNet.EtcdResponse.ACTION_CREATE
+X-Etcd-Cluster-Id
 
- Create action 
 
+### M:EtcdNet.CompareAndDeleteNodeAsync(key, prevIndex)
 
+Compare and delete specific node
 
----
-##### F:EtcdNet.EtcdResponse.ACTION_DELETE
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br>path of the node |
+| prevIndex | *System.Int64*<br>previous index |
 
- Delete action 
 
+#### Returns
 
+EtcdResponse
 
----
-##### F:EtcdNet.EtcdResponse.ACTION_SET
 
- Set action 
+### M:EtcdNet.CompareAndDeleteNodeAsync(key, prevValue)
 
+Compare and delete specific node
 
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br>Path of the node |
+| prevValue | *System.String*<br>previous value |
 
----
-##### F:EtcdNet.EtcdResponse.ACTION_GET
 
- Get action 
+#### Returns
 
+EtcdResponse
 
 
----
-##### F:EtcdNet.EtcdResponse.ACTION_EXPIRE
+### M:EtcdNet.CompareAndSwapNodeAsync(key, prevIndex, value, ttl, dir)
 
- Expire action 
+CAS(Compare and Swap) a node
 
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br>path of the node |
+| prevIndex | *System.Int64*<br>previous index |
+| value | *System.String*<br>value |
+| ttl | *System.Nullable{System.Int32}*<br>time to live (in seconds) |
+| dir | *System.Nullable{System.Boolean}*<br>is directory |
 
 
----
-##### F:EtcdNet.EtcdResponse.ACTION_COMPARE_AND_SWAP
+#### Returns
 
- CAS action 
 
 
 
----
-##### F:EtcdNet.EtcdResponse.ACTION_COMPARE_AND_DELETE
+### M:EtcdNet.CompareAndSwapNodeAsync(key, prevValue, value, ttl, dir)
 
- CAD action 
+CAS(Compare and Swap) a node
 
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br> |
+| prevValue | *System.String*<br> |
+| value | *System.String*<br> |
+| ttl | *System.Nullable{System.Int32}*<br> |
+| dir | *System.Nullable{System.Boolean}*<br> |
 
 
----
-##### P:EtcdNet.EtcdResponse.Action
+#### Returns
 
- Represents the action 
 
 
 
----
-##### P:EtcdNet.EtcdResponse.Node
+### M:EtcdNet.CreateInOrderNodeAsync(key, value, ttl, dir)
 
- Changed node 
+Create in-order node
 
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br> |
+| value | *System.String*<br> |
+| ttl | *System.Nullable{System.Int32}*<br> |
+| dir | *System.Nullable{System.Boolean}*<br> |
 
 
----
-##### P:EtcdNet.EtcdResponse.PrevNode
+#### Returns
 
- Previous node 
 
 
 
----
-##### P:EtcdNet.EtcdResponse.EtcdServer
+### M:EtcdNet.CreateNodeAsync(key, value, ttl, dir)
 
- The url of Etcd server which produce the response 
+Create a new node. If node exists, EtcdCommonException.NodeExist occurs
 
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br> |
+| value | *System.String*<br> |
+| ttl | *System.Nullable{System.Int32}*<br> |
+| dir | *System.Nullable{System.Boolean}*<br> |
 
 
----
-##### P:EtcdNet.EtcdResponse.EtcdClusterID
+#### Returns
 
- X-Etcd-Cluster-Id 
 
 
 
----
-##### P:EtcdNet.EtcdResponse.EtcdIndex
+### M:EtcdNet.DeleteNodeAsync(key, dir, ignoreKeyNotFoundException)
 
- X-Etcd-Index is the current etcd index as explained above. When request is a watch on key space, X-Etcd-Index is the current etcd index when the watch starts, which means that the watched event may happen after X-Etcd-Index. 
+delete specific node
 
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br>The path of the node, must start with `/` |
+| dir | *System.Boolean*<br>true to delete an empty directory |
+| ignoreKeyNotFoundException | *System.Nullable{System.Boolean}*<br>If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead. |
 
 
----
-##### P:EtcdNet.EtcdResponse.RaftIndex
+#### Returns
 
- X-Raft-Index is similar to the etcd index but is for the underlying raft protocol 
+SetNodeResponse instance or `null`
 
 
+### M:EtcdNet.GetNodeAsync(key, recursive, sorted, ignoreKeyNotFoundException)
 
----
-##### P:EtcdNet.EtcdResponse.RaftTerm
+Get etcd node specified by `key`
 
- X-Raft-Term is an integer that will increase whenever an etcd master election happens in the cluster. If this number is increasing rapidly, you may need to tune the election timeout. See the tuning section for details. 
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br>The path of the node, must start with `/` |
+| recursive | *System.Boolean*<br>Represents whether list the children nodes |
+| sorted | *System.Boolean*<br>To enumerate the in-order keys as a sorted list, use the "sorted" parameter. |
+| ignoreKeyNotFoundException | *System.Boolean*<br>If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead. |
 
 
+#### Returns
 
----
-# T:EtcdNet.ErrorCode
+represents response; or `null` if not exist
 
- error code in key space '/v2/keys' https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md 
 
+### M:EtcdNet.GetNodeValueAsync(key, ignoreKeyNotFoundException)
 
+Simplified version of `GetNodeAsync`. Get the value of the specific node
 
----
-##### F:EtcdNet.ErrorCode.KeyNotFound
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br>The path of the node, must start with `/` |
+| ignoreKeyNotFoundException | *System.Boolean*<br>If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead. |
 
- Key not found 
 
+#### Returns
 
+A string represents a value. It could be `null`
 
----
-##### F:EtcdNet.ErrorCode.TestFailed
 
- Compare failed 
+### .LastIndex
 
+Lastest X-Etcd-Index received by this instance
 
 
----
-##### F:EtcdNet.ErrorCode.NotFile
+### M:EtcdNet.SetNodeAsync(key, value, ttl, dir)
 
- Not a file 
+Get etcd node specified by `key`
 
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br>path of the node |
+| value | *System.String*<br>value to be set |
+| ttl | *System.Nullable{System.Int32}*<br>time to live, in seconds |
+| dir | *System.Nullable{System.Boolean}*<br>indicates if this is a directory |
 
 
----
-##### F:EtcdNet.ErrorCode.NotDir
+#### Returns
 
- Not a directory 
+SetNodeResponse
 
 
+### M:EtcdNet.WatchNodeAsync(key, recursive, waitIndex)
 
----
-##### F:EtcdNet.ErrorCode.NodeExist
+Watch changes
 
- Key already exists 
+| Name | Description |
+| ---- | ----------- |
+| key | *System.String*<br>Path of the node |
+| recursive | *System.Boolean*<br>true to monitor descendants |
+| waitIndex | *System.Nullable{System.Int64}*<br>Etcd Index is continue monitor from |
 
 
+#### Returns
 
----
-##### F:EtcdNet.ErrorCode.RootReadOnly
+EtcdResponse
 
- Root is read only 
 
+## EtcdClientOpitions
 
+Options to initialize EtcdClient
 
----
-##### F:EtcdNet.ErrorCode.DirNotEmpty
 
- Directory not empty 
+### .IgnoreCertificateError
 
+ignore invalid SSL certificate
 
 
----
-##### F:EtcdNet.ErrorCode.PrevValueRequired
+### .JsonDeserializer
 
- PrevValue is Required in POST form 
+If this field is null, default deserializer is used This parameter allows to use a different deserializer like ServiceStack.Text or Newtonsoft.Json
 
 
+### .Password
 
----
-##### F:EtcdNet.ErrorCode.TTLNaN
+Password
 
- The given TTL in POST form is not a number 
 
+### .Urls
 
+The urls of etcd servers (mandatory)
 
----
-##### F:EtcdNet.ErrorCode.IndexNaN
 
- The given index in POST form is not a number 
+### .UseProxy
 
+Use proxy?
 
 
----
-##### F:EtcdNet.ErrorCode.InvalidField
+### .Username
 
- Invalid field 
+Username
 
 
+### .X509Certificate
 
----
-##### F:EtcdNet.ErrorCode.InvalidForm
+Client certificate
 
- Invalid POST form 
 
+## EtcdCommonException
 
+Command Related Error
 
----
-##### F:EtcdNet.ErrorCode.RaftInternal
 
- Raft Internal Error 
+## EtcdCommonException.DirNotEmpty
 
+EcodeDirNotEmpty 108 "Directory not empty"
 
 
----
-##### F:EtcdNet.ErrorCode.LeaderElect
+## EtcdCommonException.KeyNotFound
 
- During Leader Election 
+EcodeKeyNotFound 100 "Key not found"
 
 
+## EtcdCommonException.NodeExist
 
----
-##### F:EtcdNet.ErrorCode.WatcherCleared
+EcodeNodeExist 105 "Key already exists"
 
- watcher is cleared due to etcd recovery 
 
+## EtcdCommonException.NotDir
 
+EcodeNotDir 104 "Not a directory"
 
----
-##### F:EtcdNet.ErrorCode.EventIndexCleared
 
- The event in requested index is outdated and cleared 
+## EtcdCommonException.NotFile
 
+EcodeNotFile 102 "Not a file"
 
 
----
-# T:EtcdNet.EtcdClient
+## EtcdCommonException.RootReadOnly
 
- The EtcdClient class is used to talk with etcd service 
+EcodeRootROnly 107 "Root is read only"
 
 
+## EtcdCommonException.TestFailed
 
----
-##### M:EtcdNet.EtcdClient.#ctor(EtcdNet.EtcdClientOpitions)
+EcodeTestFailed 101 "Compare failed"
 
- Constructor 
 
-|Name | Description |
-|-----|------|
-|options: |options to initialize|
+## EtcdException
 
+Etcd Related Error
 
----
-##### M:EtcdNet.EtcdClient.GetNodeAsync(System.String,System.Boolean,System.Boolean,System.Boolean)
 
- Get etcd node specified by `key` 
+## EtcdException.EventIndexCleared
 
-|Name | Description |
-|-----|------|
-|key: |The path of the node, must start with `/`|
-|Name | Description |
-|-----|------|
-|recursive: |Represents whether list the children nodes|
-|Name | Description |
-|-----|------|
-|sorted: |To enumerate the in-order keys as a sorted list, use the "sorted" parameter.|
-|Name | Description |
-|-----|------|
-|ignoreKeyNotFoundException: |If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead.|
-Returns: represents response; or `null` if not exist
+EcodeEventIndexCleared 401 "The event in requested index is outdated and cleared"
 
 
+## EtcdException.WatcherCleared
 
----
-##### M:EtcdNet.EtcdClient.GetNodeValueAsync(System.String,System.Boolean)
+EcodeWatcherCleared 400 "watcher is cleared due to etcd recovery"
 
- Simplified version of `GetNodeAsync`. Get the value of the specific node 
 
-|Name | Description |
-|-----|------|
-|key: |The path of the node, must start with `/`|
-|Name | Description |
-|-----|------|
-|ignoreKeyNotFoundException: |If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead.|
-Returns: A string represents a value. It could be `null`
+## EtcdGenericException
 
+Represents the generic exception from etcd https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md EtcdGenericException ©À©¤©¤ EtcdCommonException | ©À©¤ KeyNotFound | ©À©¤ TestFailed | ©À©¤ NotFile | ©À©¤ NotDir | ©À©¤ NodeExist | ©À©¤ RootReadOnly | ©¸©¤ DirNotEmpty ©À©¤©¤ EtcdPostFormException | ©À©¤ PrevValueRequired | ©À©¤ TTLNaN | ©À©¤ IndexNaN | ©À©¤ InvalidField | ©¸©¤ InvalidForm ©À©¤©¤ EtcdRaftException | ©À©¤ RaftInternal | ©¸©¤ LeaderElect ©¸©¤©¤ EtcdException ©À©¤ WatcherCleared ©¸©¤ EventIndexCleared
 
 
----
-##### M:EtcdNet.EtcdClient.SetNodeAsync(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean})
+### M:EtcdNet.#ctor(message)
 
- Get etcd node specified by `key` 
+Constructor
 
-|Name | Description |
-|-----|------|
-|key: |path of the node|
-|Name | Description |
-|-----|------|
-|value: |value to be set|
-|Name | Description |
-|-----|------|
-|ttl: |time to live, in seconds|
-|Name | Description |
-|-----|------|
-|dir: |indicates if this is a directory|
-Returns: SetNodeResponse
+| Name | Description |
+| ---- | ----------- |
+| message | *System.String*<br> |
 
+### .Cause
 
+Cause
 
----
-##### M:EtcdNet.EtcdClient.DeleteNodeAsync(System.String,System.Boolean,System.Nullable{System.Boolean})
 
- delete specific node 
+### .Code
 
-|Name | Description |
-|-----|------|
-|key: |The path of the node, must start with `/`|
-|Name | Description |
-|-----|------|
-|dir: |true to delete an empty directory|
-|Name | Description |
-|-----|------|
-|ignoreKeyNotFoundException: |If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead.|
-Returns: SetNodeResponse instance or `null`
+https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md
 
 
+## EtcdNode
 
----
-##### M:EtcdNet.EtcdClient.CreateInOrderNodeAsync(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean})
+Represent a node in etcd
 
- Create in-order node 
 
-|Name | Description |
-|-----|------|
-|key: ||
-|Name | Description |
-|-----|------|
-|value: ||
-|Name | Description |
-|-----|------|
-|ttl: ||
-|Name | Description |
-|-----|------|
-|dir: ||
-Returns: 
+### .CreatedIndex
 
+Index which creates this node
 
 
----
-##### M:EtcdNet.EtcdClient.CreateNodeAsync(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean})
+### .Expiration
 
- Create a new node. If node exists, EtcdCommonException.NodeExist occurs 
+Expiration time
 
-|Name | Description |
-|-----|------|
-|key: ||
-|Name | Description |
-|-----|------|
-|value: ||
-|Name | Description |
-|-----|------|
-|ttl: ||
-|Name | Description |
-|-----|------|
-|dir: ||
-Returns: 
 
+### M:EtcdNet.GetExpirationTime
 
+Get expiration time of this node If none, DateTime.MaxValue is returned
 
----
-##### M:EtcdNet.EtcdClient.CompareAndSwapNodeAsync(System.String,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean})
 
- CAS(Compare and Swap) a node 
+#### Returns
 
-|Name | Description |
-|-----|------|
-|key: ||
-|Name | Description |
-|-----|------|
-|prevValue: ||
-|Name | Description |
-|-----|------|
-|value: ||
-|Name | Description |
-|-----|------|
-|ttl: ||
-|Name | Description |
-|-----|------|
-|dir: ||
-Returns: 
 
 
 
----
-##### M:EtcdNet.EtcdClient.CompareAndSwapNodeAsync(System.String,System.Int64,System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean})
+### .IsDirectory
 
- CAS(Compare and Swap) a node 
+Is directory
 
-|Name | Description |
-|-----|------|
-|key: |path of the node|
-|Name | Description |
-|-----|------|
-|prevIndex: |previous index|
-|Name | Description |
-|-----|------|
-|value: |value|
-|Name | Description |
-|-----|------|
-|ttl: |time to live (in seconds)|
-|Name | Description |
-|-----|------|
-|dir: |is directory|
-Returns: 
 
+### .Key
 
+Path of the node
 
----
-##### M:EtcdNet.EtcdClient.CompareAndDeleteNodeAsync(System.String,System.String)
 
- Compare and delete specific node 
+### .ModifiedIndex
 
-|Name | Description |
-|-----|------|
-|key: |Path of the node|
-|Name | Description |
-|-----|------|
-|prevValue: |previous value|
-Returns: EtcdResponse
+Index of the modification
 
 
+### .Nodes
 
----
-##### M:EtcdNet.EtcdClient.CompareAndDeleteNodeAsync(System.String,System.Int64)
+Children nodes
 
- Compare and delete specific node 
 
-|Name | Description |
-|-----|------|
-|key: |path of the node|
-|Name | Description |
-|-----|------|
-|prevIndex: |previous index|
-Returns: EtcdResponse
+### .TTL
 
+Time to live, in second
 
 
----
-##### M:EtcdNet.EtcdClient.WatchNodeAsync(System.String,System.Boolean,System.Nullable{System.Int64})
+### .Value
 
- Watch changes 
+Value
 
-|Name | Description |
-|-----|------|
-|key: |Path of the node|
-|Name | Description |
-|-----|------|
-|recursive: |true to monitor descendants|
-|Name | Description |
-|-----|------|
-|waitIndex: |Etcd Index is continue monitor from|
-Returns: EtcdResponse
 
+## EtcdPostFormException
 
+Post Form Related Error
 
----
-##### P:EtcdNet.EtcdClient.ClusterID
 
- X-Etcd-Cluster-Id 
+## EtcdPostFormException.IndexNaN
 
+EcodeIndexNaN 203 "The given index in POST form is not a number"
 
 
----
-##### P:EtcdNet.EtcdClient.LastIndex
+## EtcdPostFormException.InvalidField
 
- Lastest X-Etcd-Index received by this instance 
+EcodeInvalidField 209 "Invalid field"
 
 
+## EtcdPostFormException.InvalidForm
 
----
-# T:EtcdNet.EtcdClientOpitions
+EcodeInvalidForm 210 "Invalid POST form"
 
- Options to initialize EtcdClient 
 
+## EtcdPostFormException.PrevValueRequired
 
+EcodePrevValueRequired 201 "PrevValue is Required in POST form"
 
----
-##### P:EtcdNet.EtcdClientOpitions.Urls
 
- The urls of etcd servers (mandatory) 
+## EtcdPostFormException.TTLNaN
 
+EcodeTTLNaN 202 "The given TTL in POST form is not a number"
 
 
----
-##### P:EtcdNet.EtcdClientOpitions.IgnoreCertificateError
+## EtcdRaftException
 
- ignore invalid SSL certificate 
+Raft Related Error
 
 
+## EtcdRaftException.Internal
 
----
-##### P:EtcdNet.EtcdClientOpitions.X509Certificate
+EcodeRaftInternal 300 "Raft Internal Error"
 
- Client certificate 
 
+## EtcdRaftException.LeaderElect
 
+EcodeLeaderElect 301 "During Leader Election"
 
----
-##### P:EtcdNet.EtcdClientOpitions.Username
 
- Username 
+## EtcdResponse
 
+Normal response of etcd
 
 
----
-##### P:EtcdNet.EtcdClientOpitions.Password
+### .Action
 
- Password 
+Represents the action
 
 
+### F:EtcdNet.ACTION_COMPARE_AND_DELETE
 
----
-##### P:EtcdNet.EtcdClientOpitions.UseProxy
+CAD action
 
- Use proxy? 
 
+### F:EtcdNet.ACTION_COMPARE_AND_SWAP
 
+CAS action
 
----
-##### P:EtcdNet.EtcdClientOpitions.JsonDeserializer
 
- If this field is null, default deserializer is used This parameter allows to use a different deserializer like ServiceStack.Text or Newtonsoft.Json 
+### F:EtcdNet.ACTION_CREATE
 
+Create action
 
 
----
-# T:EtcdNet.EtcdGenericException
+### F:EtcdNet.ACTION_DELETE
 
- Represents the generic exception from etcd https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md EtcdGenericException ©À©¤©¤ EtcdCommonException | ©À©¤ KeyNotFound | ©À©¤ TestFailed | ©À©¤ NotFile | ©À©¤ NotDir | ©À©¤ NodeExist | ©À©¤ RootReadOnly | ©¸©¤ DirNotEmpty ©À©¤©¤ EtcdPostFormException | ©À©¤ PrevValueRequired | ©À©¤ TTLNaN | ©À©¤ IndexNaN | ©À©¤ InvalidField | ©¸©¤ InvalidForm ©À©¤©¤ EtcdRaftException | ©À©¤ RaftInternal | ©¸©¤ LeaderElect ©¸©¤©¤ EtcdException ©À©¤ WatcherCleared ©¸©¤ EventIndexCleared 
+Delete action
 
 
+### F:EtcdNet.ACTION_EXPIRE
 
----
-##### M:EtcdNet.EtcdGenericException.#ctor(System.String)
+Expire action
 
- Constructor 
 
-|Name | Description |
-|-----|------|
-|message: ||
+### F:EtcdNet.ACTION_GET
 
+Get action
 
----
-##### P:EtcdNet.EtcdGenericException.Code
 
- https://github.com/coreos/etcd/blob/master/Documentation/errorcode.md 
+### F:EtcdNet.ACTION_SET
 
+Set action
 
 
----
-##### P:EtcdNet.EtcdGenericException.Cause
+### .EtcdClusterID
 
- Cause 
+X-Etcd-Cluster-Id
 
 
+### .EtcdIndex
 
----
-# T:EtcdNet.EtcdCommonException
+X-Etcd-Index is the current etcd index as explained above. When request is a watch on key space, X-Etcd-Index is the current etcd index when the watch starts, which means that the watched event may happen after X-Etcd-Index.
 
- Command Related Error 
 
+### .EtcdServer
 
+The url of Etcd server which produce the response
 
----
-# T:EtcdNet.EtcdCommonException.KeyNotFound
 
- EcodeKeyNotFound 100 "Key not found" 
+### .Node
 
+Changed node
 
 
----
-# T:EtcdNet.EtcdCommonException.TestFailed
+### .PrevNode
 
- EcodeTestFailed 101 "Compare failed" 
+Previous node
 
 
+### .RaftIndex
 
----
-# T:EtcdNet.EtcdCommonException.NotFile
+X-Raft-Index is similar to the etcd index but is for the underlying raft protocol
 
- EcodeNotFile 102 "Not a file" 
 
+### .RaftTerm
 
+X-Raft-Term is an integer that will increase whenever an etcd master election happens in the cluster. If this number is increasing rapidly, you may need to tune the election timeout. See the tuning section for details.
 
----
-# T:EtcdNet.EtcdCommonException.NotDir
 
- EcodeNotDir 104 "Not a directory" 
+### .HttpClientEx.Next
 
+A loop
 
 
----
-# T:EtcdNet.EtcdCommonException.NodeExist
+## IJsonDeserializer
 
- EcodeNodeExist 105 "Key already exists" 
+This interface allows to choose alternative JSON deserializer
 
 
+### M:EtcdNet.Deserialize``1(json)
 
----
-# T:EtcdNet.EtcdCommonException.RootReadOnly
+Deserialize the json string
 
- EcodeRootROnly 107 "Root is read only" 
+| Name | Description |
+| ---- | ----------- |
+| json | *System.String*<br>json string |
 
 
+#### Returns
 
----
-# T:EtcdNet.EtcdCommonException.DirNotEmpty
-
- EcodeDirNotEmpty 108 "Directory not empty" 
-
-
-
----
-# T:EtcdNet.EtcdPostFormException
-
- Post Form Related Error 
-
-
-
----
-# T:EtcdNet.EtcdPostFormException.PrevValueRequired
-
- EcodePrevValueRequired 201 "PrevValue is Required in POST form" 
-
-
-
----
-# T:EtcdNet.EtcdPostFormException.TTLNaN
-
- EcodeTTLNaN 202 "The given TTL in POST form is not a number" 
-
-
-
----
-# T:EtcdNet.EtcdPostFormException.IndexNaN
-
- EcodeIndexNaN 203 "The given index in POST form is not a number" 
-
-
-
----
-# T:EtcdNet.EtcdPostFormException.InvalidField
-
- EcodeInvalidField 209 "Invalid field" 
-
-
-
----
-# T:EtcdNet.EtcdPostFormException.InvalidForm
-
- EcodeInvalidForm 210 "Invalid POST form" 
-
-
-
----
-# T:EtcdNet.EtcdRaftException
-
- Raft Related Error 
-
-
-
----
-# T:EtcdNet.EtcdRaftException.Internal
-
- EcodeRaftInternal 300 "Raft Internal Error" 
-
-
-
----
-# T:EtcdNet.EtcdRaftException.LeaderElect
-
- EcodeLeaderElect 301 "During Leader Election" 
-
-
-
----
-# T:EtcdNet.EtcdException
-
- Etcd Related Error 
-
-
-
----
-# T:EtcdNet.EtcdException.WatcherCleared
-
- EcodeWatcherCleared 400 "watcher is cleared due to etcd recovery" 
-
-
-
----
-# T:EtcdNet.EtcdException.EventIndexCleared
-
- EcodeEventIndexCleared 401 "The event in requested index is outdated and cleared" 
-
-
-
----
-##### P:EtcdNet.HttpClientEx.Next
-
- A loop 
-
-
-
----
-
+deserialized json object
 
 
