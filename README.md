@@ -3,7 +3,7 @@
 
 EtcdNet is a .NET client library to access [etcd](https://github.com/coreos/etcd), which is a distributed, consistent key-value store for shared configuration and service discovery. 
 
-* Provides API for key space operations
+* Provides API for all key space operations
 * Support authentication & client-certificate
 * Support etcd cluster & failover
 * Lightweight & zero dependency on other assembly
@@ -21,9 +21,9 @@ To install etcdnet, run the following command in the Package Manager Console of 
 Install-Package etcdnet
 ```
 
-### Initialization
+### Basic Usage
 
-To use the client, the first step is to instantiate `EtcdClient` as below.
+Instantiate `EtcdClient` class, then make the call.
 
 ```csharp
 using EtcdNet;
@@ -33,25 +33,51 @@ var options = new EtcdClientOpitions() {
     //...
 };
 EtcdClient etcdClient = new EtcdClient(options);
+
+string value = await etcdClient.GetNodeValueAsync("/some-key");
+//...
 ```
 
+[Here](./doc/api.md) you can find detailed api doc for `EtcdClient` class.
 
-
-##### Options
+##### EtcdClientOpitions
 
 `EtcdClientOpitions` allows to customize the `EtcdClient`.
 
-* `Urls` The url of the etcd service. If you are running a etcd cluster, more then one urls here.
-* `IgnoreCertificateError`
-* `X509Certificate`
-* `Username`
-* `Password`
-* `UseProxy`
-* `JsonDeserializer`
+```csharp
+EtcdClientOpitions options = new EtcdClientOpitions() {
+    Urls = new string[] { "https://server1", "https://server2", "https://server3" },
+    Username = "username",
+    Password = "password",
+    UseProxy = false,
+    IgnoreCertificateError = true, 
+    X509Certificate = new X509Certificate2(@"client.p12"),
+    JsonDeserializer = new NewtonsoftJsonDeserializer(),
+};
+```
 
-### Make the call
+* `Urls` If you are running a etcd cluster, more then one urls here.
 
-`EtcdClient` class provides APIs like below
+* `Username` & `Password` are required when etcd enables basic authentication
+
+* `UseProxy` controls if use system proxy
+
+* `IgnoreCertificateError` ignores untrusted server SSL certificates. This is useful if you are using a self-signed SSL cert.
+
+* `X509Certificate` is required when etcd enabled client certification.
+
+* `JsonDeserializer` allows you to choose a different JSON deserializer. EtcdNet aims to avoid dependency on other 3rd-party assembly. Hence it takes use of the built-in `DataContractJsonSerializer` to deserialize JSON. This parameter allows you to use other JSON deserializer like Newtonsoft.Json or ServiceStack.Text.
+
+```csharp
+class NewtonsoftJsonDeserializer : EtcdNet.IJsonDeserializer
+{
+    public T Deserialize<T>(string json)
+    {
+        return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
+    }
+}
+```
+
 
 ##### Thread Safety
 

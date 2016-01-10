@@ -39,6 +39,7 @@ namespace EtcdNet.Sample
                 Urls = new string[] { "https://etcd0.em", "https://etcd1.em", "https://etcd2.em" },
                 Username = "root",
                 Password = "654321",
+                UseProxy = false,
                 IgnoreCertificateError = true, // If the ectd server is running with self-signed SSL certificate and we can ignore the SSL error
                 //X509Certificate = new X509Certificate2(@"client.p12"),  // client cerificate
                 JsonDeserializer = new NewtonsoftJsonDeserializer(),
