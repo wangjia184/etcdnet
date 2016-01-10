@@ -132,3 +132,5 @@ catch (EtcdGenericException) {
     // all etcd errors
 }
 ```
+
+Some methods which accept `ignoreKeyNotFoundException` parameter, allows you to ignore `EtcdCommonException.KeyNotFound` exception to make the code simpler.
