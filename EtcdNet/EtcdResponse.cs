@@ -13,12 +13,39 @@ namespace EtcdNet
     [DataContract]
     public class EtcdResponse
     {
+        /// <summary>
+        /// Create action
+        /// </summary>
         public const string ACTION_CREATE = "create";
+
+        /// <summary>
+        /// Delete action
+        /// </summary>
         public const string ACTION_DELETE = "delete";
+
+        /// <summary>
+        /// Set action
+        /// </summary>
         public const string ACTION_SET = "set";
+
+        /// <summary>
+        /// Get action
+        /// </summary>
         public const string ACTION_GET = "get";
+
+        /// <summary>
+        /// Expire action
+        /// </summary>
         public const string ACTION_EXPIRE = "expire";
+
+        /// <summary>
+        /// CAS action
+        /// </summary>
         public const string ACTION_COMPARE_AND_SWAP = "compareAndSwap";
+
+        /// <summary>
+        /// CAD action
+        /// </summary>
         public const string ACTION_COMPARE_AND_DELETE = "compareAndDelete";
 
         /// <summary>

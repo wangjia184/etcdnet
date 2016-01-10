@@ -7,6 +7,9 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace EtcdNet
 {
+    /// <summary>
+    /// Options to initialize EtcdClient
+    /// </summary>
     public sealed class EtcdClientOpitions
     {
         /// <summary>

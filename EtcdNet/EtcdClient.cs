@@ -27,9 +27,18 @@ namespace EtcdNet
         /// X-Etcd-Cluster-Id
         /// </summary>
         public string ClusterID { get; private set; }
+
+        /// <summary>
+        /// Lastest X-Etcd-Index received by this instance
+        /// </summary>
         public long LastIndex { get; private set; }
 
         #region constructor EtcdClient(EtcdClientOpitions options)
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="options">options to initialize</param>
         public EtcdClient(EtcdClientOpitions options)
         {
             if (options == null)
@@ -297,6 +306,7 @@ namespace EtcdNet
         /// delete specific node
         /// </summary>
         /// <param name="key">The path of the node, must start with `/`</param>
+        /// <param name="dir">true to delete an empty directory</param>
         /// <param name="ignoreKeyNotFoundException">If `true`, `EtcdCommonException.KeyNotFound` exception is ignored and `null` is returned instead.</param>
         /// <returns>SetNodeResponse instance or `null`</returns>
         public async Task<EtcdResponse> DeleteNodeAsync(string key, bool ignoreKeyNotFoundException = false, bool? dir = null)
@@ -322,6 +332,14 @@ namespace EtcdNet
             }
         }
 
+        /// <summary>
+        /// Create in-order node
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="ttl"></param>
+        /// <param name="dir"></param>
+        /// <returns></returns>
         public Task<EtcdResponse> CreateInOrderNodeAsync(string key, string value, int? ttl = null, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -344,6 +362,14 @@ namespace EtcdNet
             return SendRequest(HttpMethod.Post, url, list);
         }
 
+        /// <summary>
+        /// Create a new node. If node exists, EtcdCommonException.NodeExist occurs
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="ttl"></param>
+        /// <param name="dir"></param>
+        /// <returns></returns>
         public Task<EtcdResponse> CreateNodeAsync(string key, string value, int? ttl = null, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -367,6 +393,15 @@ namespace EtcdNet
             return SendRequest(HttpMethod.Put, url, list);
         }
 
+        /// <summary>
+        /// CAS(Compare and Swap) a node
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="prevValue"></param>
+        /// <param name="value"></param>
+        /// <param name="ttl"></param>
+        /// <param name="dir"></param>
+        /// <returns></returns>
         public Task<EtcdResponse> CompareAndSwapNodeAsync(string key, string prevValue, string value, int? ttl = null, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -390,6 +425,15 @@ namespace EtcdNet
             return SendRequest(HttpMethod.Put, url, list);
         }
 
+        /// <summary>
+        /// CAS(Compare and Swap) a node
+        /// </summary>
+        /// <param name="key">path of the node</param>
+        /// <param name="prevIndex">previous index</param>
+        /// <param name="value">value</param>
+        /// <param name="ttl">time to live (in seconds)</param>
+        /// <param name="dir">is directory</param>
+        /// <returns></returns>
         public Task<EtcdResponse> CompareAndSwapNodeAsync(string key, long prevIndex, string value, int? ttl = null, bool? dir = null)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -413,7 +457,12 @@ namespace EtcdNet
             return SendRequest(HttpMethod.Put, url, list);
         }
 
-
+        /// <summary>
+        /// Compare and delete specific node
+        /// </summary>
+        /// <param name="key">Path of the node</param>
+        /// <param name="prevValue">previous value</param>
+        /// <returns>EtcdResponse</returns>
         public Task<EtcdResponse> CompareAndDeleteNodeAsync(string key, string prevValue)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -425,6 +474,12 @@ namespace EtcdNet
             return SendRequest(HttpMethod.Delete, url);
         }
 
+        /// <summary>
+        /// Compare and delete specific node
+        /// </summary>
+        /// <param name="key">path of the node</param>
+        /// <param name="prevIndex">previous index</param>
+        /// <returns>EtcdResponse</returns>
         public Task<EtcdResponse> CompareAndDeleteNodeAsync(string key, long prevIndex)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -437,6 +492,13 @@ namespace EtcdNet
         }
 
 
+        /// <summary>
+        /// Watch changes
+        /// </summary>
+        /// <param name="key">Path of the node</param>
+        /// <param name="recursive">true to monitor descendants</param>
+        /// <param name="waitIndex">Etcd Index is continue monitor from</param>
+        /// <returns>EtcdResponse</returns>
         public async Task<EtcdResponse> WatchNodeAsync(string key, bool recursive = false, long? waitIndex = null)
         {
             if (string.IsNullOrWhiteSpace(key))

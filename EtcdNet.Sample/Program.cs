@@ -180,6 +180,14 @@ namespace EtcdNet.Sample
                     }
                     continue;
                 }
+                catch(EtcdException.EventIndexCleared)
+                {
+                    waitIndex = etcdClient.LastIndex;
+                }
+                catch(EtcdException.WatcherCleared)
+                {
+                    waitIndex = etcdClient.LastIndex;
+                }
                 catch(Exception ex)
                 {
                     int indentation = 0;

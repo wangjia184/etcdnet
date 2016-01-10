@@ -15,24 +15,45 @@ namespace EtcdNet
     [DataContract]
     public class EtcdNode
     {
+        /// <summary>
+        /// Path of the node
+        /// </summary>
         [DataMember(Name = "key")]
         public string Key { get; set; }
 
+        /// <summary>
+        /// Is directory
+        /// </summary>
         [DataMember(Name = "dir")]
         public bool IsDirectory { get; set; }
 
+        /// <summary>
+        /// Value
+        /// </summary>
         [DataMember(Name = "value")]
         public string Value { get; set; }
 
+        /// <summary>
+        /// Index which creates this node
+        /// </summary>
         [DataMember(Name = "createdIndex")]
         public long CreatedIndex { get; internal set; }
 
+        /// <summary>
+        /// Index of the modification
+        /// </summary>
         [DataMember(Name = "modifiedIndex")]
         public long ModifiedIndex { get; internal set; }
 
+        /// <summary>
+        /// Time to live, in second
+        /// </summary>
         [DataMember(Name = "ttl")]
         public int TTL { get; internal set; }
 
+        /// <summary>
+        /// Expiration time
+        /// </summary>
         [DataMember(Name = "expiration")]
         public string Expiration { get; internal set; }
 
@@ -46,6 +67,12 @@ namespace EtcdNet
         static readonly Regex TIME_REGEX = new Regex(
             @"^(?<year>\d{4,4})\-(?<month>\d{2,2})\-(?<day>\d{2,2})T(?<hour>\d{2,2})\:(?<minute>\d{2,2})\:(?<second>\d{2,2})"
             , RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.CultureInvariant);
+
+        /// <summary>
+        /// Get expiration time of this node
+        /// If none, DateTime.MaxValue is returned
+        /// </summary>
+        /// <returns></returns>
         public DateTime GetExpirationTime()
         {
             if( !string.IsNullOrWhiteSpace(this.Expiration) )
