@@ -168,6 +168,14 @@ namespace EtcdNet
                         }
                     }
                 }
+                catch(EtcdRaftException)
+                {
+                    currentClient = currentClient.Next;
+                    if (currentClient != startClient)
+                        continue; // try the next
+                    else
+                        throw; // tried all clients, all failed
+                }
                 catch(EtcdGenericException)
                 {
                     throw;
