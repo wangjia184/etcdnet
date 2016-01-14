@@ -38,7 +38,7 @@ string value = await etcdClient.GetNodeValueAsync("/some-key");
 //...
 ```
 
-[Here](./doc/api.md) you can find detailed api doc for `EtcdClient` class. More examples can be found in [sample](https://github.com/wangjia184/etcdnet/blob/master/EtcdNet.Sample/Program.cs).
+[Here](./doc/api.md) you can find detailed api doc for `EtcdClient` class. More examples can be found below.
 
 ### EtcdClientOpitions
 
@@ -134,3 +134,271 @@ catch (EtcdGenericException) {
 ```
 
 Some methods which accept `ignoreKeyNotFoundException` parameter, allows you to ignore `EtcdCommonException.KeyNotFound` exception to make the code simpler.
+
+
+## Examples
+
+#### Update by key
+
+```csharp
+await etcdClient.SetNodeAsync(key, "value to be set");
+```
+
+#### Get a key
+
+```csharp
+try {
+    EtcdResponse resp = await etcdClient.GetNodeAsync(key);
+}
+catch(EtcdCommonException.KeyNotFound) {
+    // key does not exist
+}
+```
+
+#### Get a key (ignore key-not-found error)
+
+```csharp
+EtcdResponse resp = await etcdClient.GetNodeAsync(key, ignoreKeyNotFoundException: true);
+```
+
+#### Get value by key
+
+```csharp
+string value = await etcdClient.GetNodeValueAsync(key, ignoreKeyNotFoundException: true);
+```
+
+#### Create a new key
+
+```csharp
+try {
+    EtcdResponse resp = await etcdClient.CreateNodeAsync(key, value);
+}
+catch (EtcdCommonException.NodeExist) {
+    // node already exists
+}
+```
+
+#### Create a in-order key
+
+```csharp
+etcdClient.CreateInOrderNodeAsync(key, value, ttl: 3);
+```
+
+#### Delete a key
+
+```csharp
+try {
+    EtcdResponse resp = await etcdClient.DeleteNodeAsync(key);
+}
+catch(EtcdCommonException.KeyNotFound) {
+    // key does not exist
+}
+```
+
+#### Delete a key (ignore key-not-found error)
+
+```csharp
+await etcdClient.DeleteNodeAsync(key, ignoreKeyNotFoundException: true);
+```
+
+#### List child keys in order
+
+```csharp
+try {
+	EtcdResponse resp = await etcdClient.GetNodeAsync(key, recursive: true, sorted:true);
+	if (resp.Node.Nodes != null) {
+	    foreach (var node in resp.Node.Nodes)
+	    {
+	        // child node
+	    }
+	}
+}
+catch (EtcdCommonException.KeyNotFound) {
+    // key does not exist
+}
+```
+
+#### Compare and Swap (by value)
+
+```csharp
+string prevValue = ...;
+try {
+    EtcdResponse resp = await etcdClient.CompareAndSwapNodeAsync(key, prevValue, newValue);
+}
+catch (EtcdCommonException.KeyNotFound) {
+    // key does not exist
+}
+catch (EtcdCommonException.TestFailed) {
+    // supplied prevValue does not match
+}
+```
+
+#### Compare and Swap (by index)
+
+```csharp
+long prevIndex = ...;
+try {
+    EtcdResponse resp = await etcdClient.CompareAndSwapNodeAsync(key, prevIndex, newValue);
+}
+catch (EtcdCommonException.KeyNotFound) {
+    // key does not exist
+}
+catch (EtcdCommonException.TestFailed) {
+    // supplied prevIndex does not match
+}
+```
+
+#### Compare and Delete (by value)
+
+```csharp
+string prevValue = ...;
+try {
+    EtcdResponse resp = await etcdClient.CompareAndDeleteNodeAsync(key, prevValue);
+}
+catch (EtcdCommonException.KeyNotFound) {
+    // key does not exist
+}
+catch (EtcdCommonException.TestFailed) {
+    // supplied prevValue does not match
+}
+```
+
+#### Compare and Delete (by index)
+
+```csharp
+long prevIndex = ...;
+try {
+    EtcdResponse resp = await etcdClient.CompareAndDeleteNodeAsync(key, prevIndex);
+}
+catch (EtcdCommonException.KeyNotFound) {
+    // key does not exist
+}
+catch (EtcdCommonException.TestFailed) {
+    // supplied prevValue does not match
+}
+```
+
+
+#### Keep key alive
+
+```csharp
+async void KeepAlive()
+{
+    string key = "/my/key";
+    string value = ...;
+    const int ttl = 20; // seconds
+
+    while (_running)
+    {
+        try
+        {
+            await _etcdClient.SetNodeAsync(key, value, ttl: ttl);
+            if (!_running) return;
+            await Task.Delay(ttl / 2 * 1000);
+            continue;
+        }
+        catch (EtcdGenericException ege)
+        {
+            // etcd returns an error code
+        }
+        catch (Exception ex)
+        {
+            // a generic error
+        }
+
+        if (!_running) return;
+        // something went wrong, delay 1 second and try again
+        await Task.Delay(1000);
+    }
+}
+```
+
+
+#### Watch changes
+
+```csharp
+async void WatchChanges()
+{
+	string key = "/my/key";
+	long? waitIndex = null;
+	EtcdResponse resp;
+	while (_running)
+	{
+		try
+		{
+			// when waitIndex is null, get it from the ModifiedIndex
+			if( !waitIndex.HasValue )
+			{
+				resp = await _etcdClient.GetNodeAsync( key, recursive: true);
+				if( resp != null && resp.Node != null )
+				{
+					waitIndex = resp.Node.ModifiedIndex + 1;
+
+					// and also check the children
+					if( resp.Node.Nodes != null )
+					{
+						foreach( var child in resp.Node.Nodes )
+						{
+							if (child.ModifiedIndex >= waitIndex.Value)
+								waitIndex = child.ModifiedIndex + 1;
+
+							// child node
+						}
+					}
+				}
+			}
+
+			// watch the changes
+			resp = await _etcdClient.WatchNodeAsync(key, recursive: true, waitIndex: waitIndex);
+			if (resp != null && resp.Node != null)
+			{
+				waitIndex = resp.Node.ModifiedIndex + 1;
+
+				if (resp.Node.Key.StartsWith(key, StringComparison.InvariantCultureIgnoreCase))
+				{
+					switch(resp.Action.ToLowerInvariant())
+					{
+						case EtcdResponse.ACTION_DELETE:
+							break;
+						case EtcdResponse.ACTION_EXPIRE:
+							break;
+						case EtcdResponse.ACTION_COMPARE_AND_DELETE:
+							break;
+
+						case EtcdResponse.ACTION_SET:
+							break;
+						case EtcdResponse.ACTION_CREATE:
+							break;
+						case EtcdResponse.ACTION_COMPARE_AND_SWAP:
+							break;
+						default:
+							break;
+					}
+				}
+			}
+			continue;
+		}
+		catch(TaskCanceledException)
+		{
+			// time out, try again
+		}
+		catch(EtcdException ee)
+		{
+			// reset the waitIndex
+			waitIndex = null;
+		}
+		catch (EtcdGenericException ege)
+		{
+			// etcd returns an error
+		}
+		catch (Exception ex)
+		{
+			// generic error
+		}
+
+		if (!_running) return;
+		// something went wrong, delay 1 second and try again
+		await Task.Delay(1000);
+	}
+}
+```
