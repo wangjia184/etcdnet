@@ -1,9 +1,13 @@
-﻿using System;
+﻿#if NET45
+using System;
 using System.Collections.Generic;
 using System.Linq;
+#endif
 using System.Text;
+#if NET45
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
+#endif
 using System.Runtime.Serialization.Json;
 using System.IO;
 

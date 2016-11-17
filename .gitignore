@@ -4,3 +4,4 @@ EtcdNet/bin
 EtcdNet.Sample/obj
 EtcdNet.Sample/bin
 *.user
+project.lock.json

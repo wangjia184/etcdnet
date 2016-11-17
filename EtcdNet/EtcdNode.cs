@@ -1,9 +1,13 @@
 ﻿using System;
+#if NET45
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+#endif
 using System.Text.RegularExpressions;
+#if NET45
 using System.Threading.Tasks;
+#endif
 using System.Runtime.Serialization;
 using System.Globalization;
 
