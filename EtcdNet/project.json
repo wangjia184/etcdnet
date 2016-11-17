@@ -1,5 +1,8 @@
 {
-  "version": "1.0.0-*",
+  "name": "EtcdNetCore",
+  "version": "1.0.0",
+  "description": ".NET Core port for https://github.com/wangjia184/etcdnet",
+  "authors": ["Anass Bouassaba"],
   "buildOptions": {
     "debugType": "portable"
   },
@@ -15,5 +18,9 @@
         "NETStandard.Library": "1.6.0"
       }
     }
+  },
+  "packOptions": {
+    "projectUrl": "https://github.com/anass-b/etcdnet",
+    "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.html"
   }
 }
