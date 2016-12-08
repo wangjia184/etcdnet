@@ -5,11 +5,15 @@ using System.Text;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+#if NET45
 using System.Net.Cache;
+#endif
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+#if NET45
 using System.Security.Cryptography.X509Certificates;
+#endif
 
 namespace EtcdNet
 {
@@ -45,7 +49,7 @@ namespace EtcdNet
                 throw new ArgumentNullException("options");
             if (options.Urls == null || options.Urls.Length == 0)
                 throw new ArgumentException("`EtcdClientOpitions.Urls` does not contain valid url");
-
+#if NET45
             WebRequestHandler handler = new WebRequestHandler()
             {
                 UseProxy = options.UseProxy,
@@ -55,7 +59,7 @@ namespace EtcdNet
             };
             if (options.X509Certificate != null)
                 handler.ClientCertificates.Add(options.X509Certificate);
-
+#endif
             AuthenticationHeaderValue authenticationHeaderValue = null;
             if( !string.IsNullOrWhiteSpace(options.Username) &&
                 !string.IsNullOrWhiteSpace(options.Password) )
@@ -65,16 +69,19 @@ namespace EtcdNet
             }
 
             _jsonDeserializer = options.JsonDeserializer == null ? new DefaultJsonDeserializer() : options.JsonDeserializer;
-
+#if NET45
             if (options.IgnoreCertificateError)
                 handler.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; };
-
+#endif
             HttpClientEx [] httpClients = options.Urls.Select(u =>
                 {
                     if (string.IsNullOrWhiteSpace(u))
                         throw new ArgumentNullException("`urls` array contains empty url");
-
+#if NET45
                     HttpClientEx httpClient = new HttpClientEx(handler);
+#else
+                    HttpClientEx httpClient = new HttpClientEx();
+#endif
                     httpClient.BaseAddress = new Uri(u);
                     httpClient.DefaultRequestHeaders.Authorization = authenticationHeaderValue;
                     return httpClient;
@@ -254,8 +261,13 @@ namespace EtcdNet
                 string url = string.Format( CultureInfo.InvariantCulture
                     , "/v2/keys{0}?recursive={1}&sorted={2}"
                     , key
+#if NET45
                     , recursive.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()
                     , sorted.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()
+#else
+                    , recursive.ToString().ToLowerInvariant()
+                    , sorted.ToString().ToLowerInvariant()
+#endif
                     );
                 EtcdResponse getNodeResponse = await SendRequest( HttpMethod.Get, url);
                 return getNodeResponse;
@@ -305,7 +317,11 @@ namespace EtcdNet
             if (ttl.HasValue)
                 list.Add(new KeyValuePair<string, string>("ttl", ttl.Value.ToString(CultureInfo.InvariantCulture)));
             if( dir.HasValue)
+#if NET45
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
+#else
+                list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString().ToLowerInvariant()));
+#endif
 
             return SendRequest(HttpMethod.Put, url, list);
         }
@@ -365,7 +381,11 @@ namespace EtcdNet
             if (ttl.HasValue)
                 list.Add(new KeyValuePair<string, string>("ttl", ttl.Value.ToString(CultureInfo.InvariantCulture)));
             if (dir.HasValue)
+#if NET45
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
+#else
+                list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString().ToLowerInvariant()));
+#endif
 
             return SendRequest(HttpMethod.Post, url, list);
         }
@@ -396,7 +416,11 @@ namespace EtcdNet
             if (ttl.HasValue)
                 list.Add(new KeyValuePair<string, string>("ttl", ttl.Value.ToString(CultureInfo.InvariantCulture)));
             if (dir.HasValue)
+#if NET45
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
+#else
+                list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString().ToLowerInvariant()));
+#endif
 
             return SendRequest(HttpMethod.Put, url, list);
         }
@@ -428,7 +452,11 @@ namespace EtcdNet
             if (ttl.HasValue)
                 list.Add(new KeyValuePair<string, string>("ttl", ttl.Value.ToString(CultureInfo.InvariantCulture)));
             if (dir.HasValue)
+#if NET45
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
+#else
+                list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString().ToLowerInvariant()));
+#endif
 
             return SendRequest(HttpMethod.Put, url, list);
         }
@@ -460,7 +488,11 @@ namespace EtcdNet
             if (ttl.HasValue)
                 list.Add(new KeyValuePair<string, string>("ttl", ttl.Value.ToString(CultureInfo.InvariantCulture)));
             if (dir.HasValue)
+#if NET45
                 list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()));
+#else
+                list.Add(new KeyValuePair<string, string>("dir", dir.Value.ToString().ToLowerInvariant()));
+#endif
 
             return SendRequest(HttpMethod.Put, url, list);
         }
@@ -517,7 +549,11 @@ namespace EtcdNet
             string requestUri = string.Format(CultureInfo.InvariantCulture
                 , "/v2/keys{0}?wait=true&recursive={1}"
                 , key
+#if NET45
                 , recursive.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()
+#else
+                , recursive.ToString().ToLowerInvariant()
+#endif
                 );
             if (waitIndex.HasValue)
             {
@@ -548,7 +584,7 @@ namespace EtcdNet
                         throw;
                 }
             }
-            
+
         }
     }
 }

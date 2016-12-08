@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+#if NET45
 using System.Linq;
 using System.Net;
 using System.Text;
+#endif
 using System.Threading.Tasks;
+#if NET45
 using System.Security.Cryptography.X509Certificates;
 using EtcdNet;
-
+#endif
 
 namespace EtcdNet.Sample
 {
@@ -36,7 +39,11 @@ namespace EtcdNet.Sample
         static async Task DoSample()
         {
             EtcdClientOpitions options = new EtcdClientOpitions() {
+#if NET45 // TODO: This is optional, having HTTPS setup could make this work in .NET Core as well, but it's not tested for now
                 Urls = new string[] { "https://etcd0.em", "https://etcd1.em", "https://etcd2.em" },
+#else
+                Urls = new string[] { "http://localhost:2379" },
+#endif
                 Username = "root",
                 Password = "654321",
                 UseProxy = false,
@@ -46,7 +53,7 @@ namespace EtcdNet.Sample
             };
             EtcdClient etcdClient = new EtcdClient(options);
 
-            
+
 
             string key = "/my/key";
             string value;
@@ -58,7 +65,7 @@ namespace EtcdNet.Sample
             catch(EtcdCommonException.KeyNotFound) {
                 Console.WriteLine("Key `{0}` does not exist", key);
             }
-            
+
 
             // update the value using SetNodeAsync
             EtcdResponse resp = await etcdClient.SetNodeAsync(key, "some value");
@@ -105,7 +112,7 @@ namespace EtcdNet.Sample
             }
             catch (EtcdCommonException.NodeExist) {
                 Console.WriteLine("Key `{0}` already exists", key);
-                
+
             }
 
             long prevIndex = 1;
@@ -133,7 +140,7 @@ namespace EtcdNet.Sample
                 Console.WriteLine("Key `{0}` can not be updated because the supplied previous index is incorrect", key);
             }
 
-            
+
 
             try {
                 resp = await etcdClient.CompareAndDeleteNodeAsync(key, prevIndex+1);
@@ -160,7 +167,7 @@ namespace EtcdNet.Sample
                     etcdClient.DeleteNodeAsync(key, ignoreKeyNotFoundException: true).Wait();
                 }
             }
-            
+
         }
 
 

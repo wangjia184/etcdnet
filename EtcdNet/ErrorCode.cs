@@ -1,8 +1,10 @@
-﻿using System;
+﻿#if NET45
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#endif
 
 namespace EtcdNet
 {
@@ -65,7 +67,7 @@ namespace EtcdNet
         /// <summary>
         /// Invalid field
         /// </summary>
-        InvalidField = 209, 
+        InvalidField = 209,
 
         /// <summary>
         /// Invalid POST form

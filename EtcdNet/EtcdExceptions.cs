@@ -1,8 +1,10 @@
 ﻿using System;
+#if NET45
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#endif
 using System.Net.Http;
 using System.Globalization;
 
@@ -177,7 +179,7 @@ namespace EtcdNet
         }
     }
 
-    
+
     /// <summary>
     /// Post Form Related Error
     /// </summary>
@@ -251,7 +253,7 @@ namespace EtcdNet
         }
     }
 
-    
+
     /// <summary>
     /// Raft Related Error
     /// </summary>
@@ -292,7 +294,7 @@ namespace EtcdNet
         }
     }
 
-    
+
     /// <summary>
     /// Etcd Related Error
     /// </summary>
@@ -334,5 +336,5 @@ namespace EtcdNet
         }
     }
 
-    
+
 }
