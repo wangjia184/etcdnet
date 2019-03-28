@@ -1,7 +1,6 @@
 *.suo
-EtcdNet/obj
-EtcdNet/bin
-EtcdNet.Sample/obj
-EtcdNet.Sample/bin
+obj/
+bin/
 *.user
 project.lock.json
+.vs/
