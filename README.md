@@ -9,16 +9,16 @@ EtcdNet is a .NET client library to access [etcd](https://github.com/coreos/etcd
 * Lightweight & zero dependency on other assembly
 * Task-based Asynchronous Pattern (TAP) API
 * Structured Exceptions
-* .NET Framework minimal requirement : v4.5
+* .NET Standard
 
 
 ## Get Started
 
 ### Installation
-To install etcdnet, run the following command in the Package Manager Console of Visual Studio. Or you can search `etcdnet` in NuGet
+To install etcdnet, run the following command in the Package Manager Console of Visual Studio. Or you can search `etcdnetv2` in NuGet
 
 ```
-Install-Package etcdnet
+Install-Package etcdnetv2
 ```
 
 ### Basic Usage
@@ -60,11 +60,11 @@ EtcdClientOpitions options = new EtcdClientOpitions() {
 
 * `Username` & `Password` are required when etcd enables basic authentication
 
-* `UseProxy` controls if use system proxy
+* `UseProxy` controls if use system proxy. _This option is not available any more, we will add it back after .NET Standard 2.1 is released._
 
-* `IgnoreCertificateError` ignores untrusted server SSL certificates. This is useful if you are using a self-signed SSL cert.
+* `IgnoreCertificateError` ignores untrusted server SSL certificates. This is useful if you are using a self-signed SSL cert. _This option is not available any more, we will add it back after .NET Standard 2.1 is released._
 
-* `X509Certificate` is required when etcd enabled client certification.
+* `X509Certificate` is required when etcd enabled client certification. _This option is not available any more, we will add it back after .NET Standard 2.1 is released._
 
 * `JsonDeserializer` allows you to choose a different JSON deserializer. EtcdNet aims to avoid dependency on other 3rd-party assembly. Hence it takes use of the built-in `DataContractJsonSerializer` to deserialize JSON. This parameter allows you to use other JSON deserializer like Newtonsoft.Json or ServiceStack.Text.
 

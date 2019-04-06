@@ -59,6 +59,14 @@ namespace EtcdNet
             };
             if (options.X509Certificate != null)
                 handler.ClientCertificates.Add(options.X509Certificate);
+#else
+            /*
+             * To be implemented when .NET Standard 2.1 is available
+            SocketsHttpHandler handler = new SocketsHttpHandler()
+            {
+                UseProxy = options.UseProxy,
+            };
+            */
 #endif
             AuthenticationHeaderValue authenticationHeaderValue = null;
             if( !string.IsNullOrWhiteSpace(options.Username) &&

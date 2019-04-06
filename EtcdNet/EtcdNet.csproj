@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.0.0</Version>
-    <PackageId>etcdnet</PackageId>
-    <Copyright>Copyright 2016</Copyright>
-    <RepositoryUrl>https://github.com/anass-b/etcdnet.git</RepositoryUrl>
+    <Version>2.0.0</Version>
+    <PackageId>etcdnetv2</PackageId>
+    <Copyright>Copyright 2019</Copyright>
+    <RepositoryUrl>https://github.com/wangjia184/etcdnet</RepositoryUrl>
     <PackageReleaseNotes>Zero dependency / Support authentication / client certificate / etcd cluster</PackageReleaseNotes>
-    <Description>.NET Core port for https://github.com/wangjia184/etcdnet</Description>
+    <Description>https://github.com/wangjia184/etcdnet version 2</Description>
     <Company />
     <Product>etcdnet</Product>
     <Authors>Jerry.Wang</Authors>
