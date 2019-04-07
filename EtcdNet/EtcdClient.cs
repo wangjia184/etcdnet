@@ -49,25 +49,7 @@ namespace EtcdNet
                 throw new ArgumentNullException("options");
             if (options.Urls == null || options.Urls.Length == 0)
                 throw new ArgumentException("`EtcdClientOpitions.Urls` does not contain valid url");
-#if NET45
-            WebRequestHandler handler = new WebRequestHandler()
-            {
-                UseProxy = options.UseProxy,
-                AllowAutoRedirect = false,
-                AllowPipelining = true,
-                CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore),
-            };
-            if (options.X509Certificate != null)
-                handler.ClientCertificates.Add(options.X509Certificate);
-#else
-            /*
-             * To be implemented when .NET Standard 2.1 is available
-            SocketsHttpHandler handler = new SocketsHttpHandler()
-            {
-                UseProxy = options.UseProxy,
-            };
-            */
-#endif
+
             AuthenticationHeaderValue authenticationHeaderValue = null;
             if( !string.IsNullOrWhiteSpace(options.Username) &&
                 !string.IsNullOrWhiteSpace(options.Password) )
@@ -78,18 +60,14 @@ namespace EtcdNet
 
             _jsonDeserializer = options.JsonDeserializer == null ? new DefaultJsonDeserializer() : options.JsonDeserializer;
 #if NET45
-            if (options.IgnoreCertificateError)
-                handler.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; };
+            
 #endif
             HttpClientEx [] httpClients = options.Urls.Select(u =>
                 {
                     if (string.IsNullOrWhiteSpace(u))
                         throw new ArgumentNullException("`urls` array contains empty url");
-#if NET45
-                    HttpClientEx httpClient = new HttpClientEx(handler);
-#else
-                    HttpClientEx httpClient = new HttpClientEx();
-#endif
+
+                    HttpClientEx httpClient = new HttpClientEx(options);
                     httpClient.BaseAddress = new Uri(u);
                     httpClient.DefaultRequestHeaders.Authorization = authenticationHeaderValue;
                     return httpClient;

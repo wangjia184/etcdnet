@@ -60,11 +60,11 @@ EtcdClientOpitions options = new EtcdClientOpitions() {
 
 * `Username` & `Password` are required when etcd enables basic authentication
 
-* `UseProxy` controls if use system proxy. _This option is not available any more, we will add it back after .NET Standard 2.1 is released._
+* `UseProxy` controls if use system proxy. 
 
-* `IgnoreCertificateError` ignores untrusted server SSL certificates. This is useful if you are using a self-signed SSL cert. _This option is not available any more, we will add it back after .NET Standard 2.1 is released._
+* `IgnoreCertificateError` ignores untrusted server SSL certificates. This is useful if you are using a self-signed SSL cert. 
 
-* `X509Certificate` is required when etcd enabled client certification. _This option is not available any more, we will add it back after .NET Standard 2.1 is released._
+* `X509Certificate` is required when etcd enabled client certification. 
 
 * `JsonDeserializer` allows you to choose a different JSON deserializer. EtcdNet aims to avoid dependency on other 3rd-party assembly. Hence it takes use of the built-in `DataContractJsonSerializer` to deserialize JSON. This parameter allows you to use other JSON deserializer like Newtonsoft.Json or ServiceStack.Text.
 
